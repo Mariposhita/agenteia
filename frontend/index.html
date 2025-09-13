@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Icasoft I21 - Soporte Técnico</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .hero-section{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+    .chatbot-button{position:fixed;bottom:20px;right:20px;width:64px;height:64px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 25px rgba(102,126,234,.3);transition:all .3s ease;z-index:1000;animation:pulse 2s infinite;}
+    .chatbot-button:hover{transform:scale(1.1);box-shadow:0 12px 35px rgba(102,126,234,.4);}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(102,126,234,.7);}70%{box-shadow:0 0 0 15px rgba(102,126,234,0);}100%{box-shadow:0 0 0 0 rgba(102,126,234,0);}}
+    .chatbot-modal{position:fixed;right:20px;bottom:100px;width:400px;height:500px;background:#fff;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,.1);display:none;z-index:1001;overflow:hidden;}
+    .chat-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:12px 16px;font-weight:bold;}
+    .chat-messages{height:calc(100% - 112px);overflow-y:auto;padding:12px;background:#f8fafc;}
+    .chat-input{padding:12px;border-top:1px solid #e2e8f0;background:#fff;}
+    .message{margin-bottom:12px;padding:10px;border-radius:10px;max-width:85%;}
+    .user-message{background:#e3f2fd;margin-left:auto;text-align:right;}
+    .bot-message{background:#fff;border:1px solid #e2e8f0;}
+
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 640px){
+      .chatbot-button{width:56px;height:56px;bottom:16px;right:16px;}
+      .chatbot-modal{
+        left:0; right:0; bottom:0; top:auto;
+        width:100vw; height:65vh; border-radius:16px 16px 0 0;
+      }
+      .chat-messages{height:calc(65vh - 112px);}
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Header -->
+  <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between items-center py-4">
+        <!-- brand -->
+        <div class="flex items-center gap-2">
+          <i class="fas fa-microchip text-2xl sm:text-3xl text-blue-600"></i>
+          <h1 class="text-xl sm:text-2xl font-bold">Icasoft I21</h1>
+        </div>
+
+        <!-- desktop menu -->
+        <div class="hidden md:flex items-center gap-6">
+          <a href="#inicio" class="hover:text-blue-600">Inicio</a>
+          <a href="#nosotros" class="hover:text-blue-600">Nosotros</a>
+          <a href="#servicios" class="hover:text-blue-600">Servicios</a>
+          <a href="#tienda" class="hover:text-blue-600">Tienda</a>
+          <a href="#contacto" class="hover:text-blue-600">Contacto</a>
+          <a href="/login?next=/admin" class="hover:text-blue-600">Perfil</a>
+          <a href="https://wa.me/1234567890?text=Hola,%20necesito%20ayuda%20técnica"
+             class="whatsapp-btn inline-flex items-center px-4 py-2 rounded-full text-white bg-[#25d366] hover:bg-[#1fb45a]"
+             target="_blank"><i class="fab fa-whatsapp mr-2"></i>WhatsApp</a>
+        </div>
+
+        <!-- mobile toggle -->
+        <button id="navToggle" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded hover:bg-gray-100">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+
+      <!-- mobile menu -->
+      <div id="mobileMenu" class="md:hidden hidden pb-3 border-t border-gray-200">
+        <div class="flex flex-col gap-2 pt-3">
+          <a href="#inicio" class="py-2 hover:text-blue-600">Inicio</a>
+          <a href="#nosotros" class="py-2 hover:text-blue-600">Nosotros</a>
+          <a href="#servicios" class="py-2 hover:text-blue-600">Servicios</a>
+          <a href="#tienda" class="py-2 hover:text-blue-600">Tienda</a>
+          <a href="#contacto" class="py-2 hover:text-blue-600">Contacto</a>
+          <a href="/login?next=/admin" class="py-2 hover:text-blue-600">Perfil</a>
+          <a href="https://wa.me/1234567890?text=Hola,%20necesito%20ayuda%20técnica"
+             class="py-2 inline-flex items-center w-fit px-4 rounded-full text-white bg-[#25d366] hover:bg-[#1fb45a]"
+             target="_blank"><i class="fab fa-whatsapp mr-2"></i>WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="inicio" class="hero-section text-white">
+    <div class="max-w-7xl mx-auto px-4 py-16 sm:py-20">
+      <div class="text-center">
+        <h1 class="text-3xl sm:text-5xl font-bold mb-4 sm:mb-6">Soporte Técnico</h1>
+        <p class="text-base sm:text-xl mb-6 sm:mb-8 opacity-90">Resolvemos tus problemas de hardware y software con tecnología avanzada</p>
+        <div class="flex justify-center">
+          <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6089b8b5-a210-462b-a6b4-c8d27ee69d5a.png"
+               alt="Técnico especialista"
+               class="rounded-lg shadow-xl w-full max-w-2xl h-auto">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nosotros -->
+  <section id="nosotros" class="py-14 sm:py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-10 sm:mb-12">
+        <h2 class="text-2xl sm:text-4xl font-bold mb-3">Acerca de Nosotros</h2>
+        <p class="text-gray-600 text-base sm:text-xl">Expertos en soporte tècnico en hardware y software como computadoras, laptops e impresoras</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
+        <div>
+          <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/22475c57-ecde-484d-99a8-b5ddd5f47cde.png"
+               alt="Equipo técnico" class="rounded-lg shadow-lg w-full h-auto">
+        </div>
+        <div class="section-card">
+          <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800">¿Quiénes Somos?</h3>
+          <p class="text-gray-600 mb-3">Combinamos experiencia humana con IA para soluciones rápidas y efectivas.</p>
+          <p class="text-gray-600 mb-6">Técnicos certificados y atenciòn al pùblico las 24horas/7 dias de la semanapara diagnósticos precisos.</p>
+          <div class="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div class="text-2xl sm:text-3xl font-bold text-blue-600">100+</div>
+              <div class="text-sm text-gray-600">Problemas Resueltos</div>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-bold text-green-600">96%</div>
+              <div class="text-sm text-gray-600">Satisfacción</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Servicios -->
+  <section id="servicios" class="py-14 sm:py-16 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-10 sm:mb-12">
+        <h2 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-3">Nuestros Servicios</h2>
+        <p class="text-base sm:text-xl text-gray-600">Soluciones integrales para todos tus problemas tecnológicos</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div class="service-card">
+          <i class="fas fa-desktop text-3xl sm:text-4xl text-blue-600 mb-4"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3">Reparación Hardware</h3>
+          <p class="text-gray-600 text-sm sm:text-base">Diagnóstico y reparación de computadoras y laptops.</p>
+        </div>
+        <div class="service-card">
+          <i class="fas fa-code text-3xl sm:text-4xl text-green-600 mb-4"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3">Soporte Software</h3>
+          <p class="text-gray-600 text-sm sm:text-base">Instalación, configuración y resolución de problemas.</p>
+        </div>
+        <div class="service-card">
+          <i class="fas fa-robot text-3xl sm:text-4xl text-purple-600 mb-4"></i>
+          <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3">Asistencia IA 24/7</h3>
+          <p class="text-gray-600 text-sm sm:text-base">Chatbot que resuelve problemas básicos al instante.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tienda -->
+  <section id="tienda" class="py-14 sm:py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <h2 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-8 sm:mb-12">Nuestra Galerìa</h2>
+      <div class="grid md:grid-cols-2 gap-8 sm:gap-12">
+        <div class="section-card">
+          <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Ubicación</h3>
+          <p class="text-gray-600 mb-3"><i class="fas fa-map-marker-alt text-blue-600 mr-2"></i> Ca.Cajamarca 156 - Galeria Amisur int. 135</p>
+          <p class="text-gray-600 mb-3"><i class="fas fa-clock text-blue-600 mr-2"></i> L–V: 9:00–20:00 / Sáb: 9:00–18:00</p>
+          <p class="text-gray-600 mb-6"><i class="fas fa-phone text-blue-600 mr-2"></i> 972 142 523</p>
+          <a href="https://wa.me/1234567890?text=Quiero%20visitar%20la%20tienda" class="whatsapp-btn inline-flex items-center" target="_blank">
+            <i class="fab fa-whatsapp mr-2"></i>Contactar Tienda
+          </a>
+        </div>
+        <div>
+          <!-- wrapper 16:9 responsive -->
+          <div class="relative w-full" style="padding-bottom:56.25%">
+            <iframe
+              class="absolute inset-0 w-full h-full rounded-lg"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3870.2186740547177!2d-75.7278443!3d-14.0642606!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9110e2bd0f99f96f%3A0x21a304d4341e31e2!2sIcasoft%20i21!5e0!3m2!1ses!2spe!4v1757736029320!5m2!1ses!2spe"
+              allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Formulario -->
+  <section id="contacto" class="py-14 sm:py-16 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-3">Registro de Solicitud</h2>
+          <p class="text-gray-600 text-base sm:text-xl">¿Tienes un problema técnico? Regístralo aquí</p>
+        </div>
+        <div class="section-card">
+          <form id="contactForm">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">Nombre Completo</label>
+                <input type="text" id="nombre" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+              </div>
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">Email</label>
+                <input type="email" id="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">Teléfono</label>
+                <input type="tel" id="telefono" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+              </div>
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">Tipo de Problema</label>
+                <select id="categoria" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                  <option value="">Seleccionar...</option>
+                  <option value="hardware">Hardware</option>
+                  <option value="software">Software</option>
+                  <option value="redes">Redes</option>
+                  <option value="otros">Otros</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <label class="block text-gray-700 font-semibold mb-2">Domicilio</label>
+              <input type="text" id="domicilio" placeholder="Calle, número, distrito/ciudad" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div class="mt-6">
+              <label class="block text-gray-700 font-semibold mb-2">Descripción del Problema</label>
+              <textarea id="descripcion" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describe tu problema técnico en detalle..." required></textarea>
+            </div>
+
+            <div class="mt-8 text-center">
+              <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 w-full sm:w-auto">
+                <i class="fas fa-paper-plane mr-2"></i>Enviar Solicitud
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <i class="fas fa-microchip text-2xl text-blue-500 mr-2"></i>
+            <h3 class="text-xl font-bold">Icasoft I21</h3>
+          </div>
+          <p class="text-gray-400">Especialistas en servicio tècnico profesional de computadoras en Ica, con atenciòn ràpida, confiable y con garantìa.</p>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Contacto</h4>
+          <p class="text-gray-400 mb-2"><i class="fas fa-phone mr-2"></i>972 142 523</p>
+          <p class="text-gray-400 mb-2"><i class="fas fa-envelope mr-2"></i>company.icasofti21@gmail.com</p>
+          <p class="text-gray-400"><i class="fas fa-map-marker-alt mr-2"></i>Ca.Cajamarca 156 - Galeria Amisur int. 135 - A (media cuadra de la plaza de armas, ica), Ica, Peru</p>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Horarios</h4>
+          <p class="text-gray-400 mb-2">Lun - Vie: 9:00 AM - 7:00 PM</p>
+          <p class="text-gray-400 mb-2">Sábados: 9:00 AM - 5:00 PM</p>
+          <p class="text-gray-400">Domingos: Cerrado</p>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Síguenos</h4>
+          <div class="flex space-x-4">
+            <a href="https://www.facebook.com/icasofti21.pe/about" class="text-gray-400 hover:text-white"><i class="fab fa-facebook text-xl"></i></a>
+            <a href="https://www.tiktok.com/@icasoft" class="text-gray-400 hover:text-white"><i class="fab fa-tiktok text-xl"></i></a>
+            <a href="https://www.instagram.com/icasoft/#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
+            <a href="https://www.linkedin.com/company/icasoft-ingenier%C3%ADa-21/posts/?feedView=all" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin text-xl"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+        <p class="text-gray-400">© 2024 Icasoft I21. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Botón flotante del chatbot -->
+  <button id="openChatBtn" class="chatbot-button" aria-label="Abrir chat">
+    <i class="fas fa-robot text-white text-2xl"></i>
+  </button>
+
+  <!-- Modal del chatbot -->
+  <div id="chatbotModal" class="chatbot-modal" role="dialog" aria-modal="true" aria-label="Asistente de Soporte">
+    <div class="chat-header">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-robot"></i> <span>Asistente Técnico IA</span>
+        </div>
+        <button id="closeChatBtn" class="text-white/90 hover:text-white" aria-label="Cerrar chat">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="bot-message message">
+        <strong>🤖 Asistente IA:</strong><br>
+        ¡Hola! Soy tu asistente técnico. ¿Cuál es tu consulta?
+      </div>
+    </div>
+    <div class="chat-input">
+      <div class="flex gap-2">
+        <input type="text" id="chatInput" placeholder="Describe tu problema técnico..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button id="sendChatBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Toggle menú móvil
+    const navToggle = document.getElementById('navToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    navToggle?.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Abrir/cerrar chatbot
+    const modal = document.getElementById('chatbotModal');
+    document.getElementById('openChatBtn').addEventListener('click', () => {
+      modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    });
+    document.getElementById('closeChatBtn').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    document.getElementById('sendChatBtn').addEventListener('click', enviarMensaje);
+    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') enviarMensaje(); });
+
+    function agregarMensajeUsuario(texto){
+      const div = document.createElement('div');
+      div.className = 'user-message message';
+      div.innerHTML = `<strong>Tú:</strong><br>${texto}`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    function agregarMensajeBot(texto){
+      const div = document.createElement('div');
+      div.className = 'bot-message message';
+      div.innerHTML = `<strong>🤖 Asistente IA:</strong><br>${texto}`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function enviarMensaje(){
+      const mensaje = chatInput.value.trim();
+      if (!mensaje) return;
+      agregarMensajeUsuario(mensaje);
+      chatInput.value = '';
+      chatInput.disabled = true;
+      try{
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ message: mensaje })
+        });
+        const data = await res.json();
+        agregarMensajeBot(data.answer || 'Sin respuesta.');
+        if (data.ticket_required) mostrarFormularioTicket();
+      }catch{
+        agregarMensajeBot('Error al conectar con el servidor.');
+      }finally{
+        chatInput.disabled = false;
+      }
+    }
+
+    function mostrarFormularioTicket(){
+      if (document.getElementById('ticketForm')) return;
+      const formDiv = document.createElement('div');
+      formDiv.className = 'bot-message message';
+      formDiv.id = 'ticketForm';
+      formDiv.innerHTML = `
+        <form onsubmit="enviarTicket(event)">
+          <strong>Ingresa tus datos para generar el ticket:</strong><br>
+          <input type="text" id="ticketNombre" placeholder="Nombre" class="w-full my-2 px-2 py-1 border rounded" required><br>
+          <input type="tel" id="ticketTelefono" placeholder="Teléfono" class="w-full my-2 px-2 py-1 border rounded" required><br>
+          <input type="text" id="ticketDomicilio" placeholder="Domicilio" class="w-full my-2 px-2 py-1 border rounded" required><br>
+          <textarea id="ticketProblema" placeholder="Describe el problema" class="w-full my-2 px-2 py-1 border rounded" required></textarea><br>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Enviar Ticket</button>
+        </form>`;
+      chatMessages.appendChild(formDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function enviarTicket(e){
+      e.preventDefault();
+      const nombre = document.getElementById('ticketNombre').value.trim();
+      const telefono = document.getElementById('ticketTelefono').value.trim();
+      const domicilio = document.getElementById('ticketDomicilio').value.trim();
+      const problema = document.getElementById('ticketProblema').value.trim();
+      try{
+        const res = await fetch('/api/crear-ticket',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            nombre, telefono, domicilio,
+            problema, categoria:'otros', titulo:'Ticket desde chatbot', tipo:'correctivo'
+          })
+        });
+        const data = await res.json();
+        if(res.ok && data.success){
+          agregarMensajeBot('✅ Ticket enviado correctamente. ¡Gracias! Un técnico te contactará pronto.');
+          document.getElementById('ticketForm')?.remove();
+        }else{
+          agregarMensajeBot(data.message || 'Error al enviar el ticket.');
+        }
+      }catch{
+        agregarMensajeBot('Error al enviar el ticket.');
+      }
+    }
+
+    // Form principal
+    document.getElementById('contactForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+      const categoria = document.getElementById('categoria').value || 'otros';
+      const domicilio = document.getElementById('domicilio').value.trim();
+      const descripcion = document.getElementById('descripcion').value.trim();
+
+      if(!nombre || !telefono || !domicilio || !descripcion){
+        alert('Por favor, completa todos los campos obligatorios.');
+        return;
+      }
+
+      try{
+        const res = await fetch('/api/crear-ticket',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            nombre, telefono, domicilio,
+            descripcion, categoria,
+            titulo:`Solicitud de ${nombre}`, tipo:'correctivo'
+          })
+        });
+        const data = await res.json();
+        if(res.ok && data.success){
+          alert('✅ Ticket enviado correctamente. ¡Gracias! Un técnico te contactará pronto.');
+          this.reset();
+        }else{
+          alert(data.message || 'Error al crear el ticket');
+        }
+      }catch{
+        alert('Error al enviar la solicitud.');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Panel Admin | Soporte</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* resaltado suave cuando se guarda */
+    .flash-ok { animation: flashOk 1.2s ease; }
+    .flash-bad { animation: flashBad 1.2s ease; }
+    @keyframes flashOk { 0% { background:#dcfce7 } 100% { background:transparent } }
+    @keyframes flashBad { 0% { background:#fee2e2 } 100% { background:transparent } }
+    /* celdas con descripción: multi-línea con truncado */
+    .line-clamp-3 {
+      display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    thead th { position: sticky; top: 0; z-index: 1; }
+  </style>
+</head>
+<body class="bg-slate-50">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-semibold">Soporte · Panel de administración</h1>
+      <nav class="flex gap-4 items-center">
+        <a href="/perfil" class="text-white/90 hover:underline">Perfil</a>
+        <a href="/logout" class="text-white/90 hover:underline">Salir</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Resumen -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white/80 backdrop-blur p-4 rounded-xl shadow">
+        <p class="text-slate-500 text-sm">Total tickets</p>
+        <p class="text-2xl font-bold">{{ stats.total or 0 }}</p>
+      </div>
+      <div class="bg-white/80 backdrop-blur p-4 rounded-xl shadow">
+        <p class="text-slate-500 text-sm">Abiertos</p>
+        <p class="text-2xl font-bold">{{ (stats.estados.abierto or 0) if stats.estados else 0 }}</p>
+      </div>
+      <div class="bg-white/80 backdrop-blur p-4 rounded-xl shadow">
+        <p class="text-slate-500 text-sm">En proceso</p>
+        <p class="text-2xl font-bold">{{ (stats.estados['en_proceso'] or 0) if stats.estados and 'en_proceso' in stats.estados else 0 }}</p>
+      </div>
+      <div class="bg-white/80 backdrop-blur p-4 rounded-xl shadow">
+        <p class="text-slate-500 text-sm">Resueltos</p>
+        <p class="text-2xl font-bold">{{ (stats.estados.resuelto or 0) if stats.estados else 0 }}</p>
+      </div>
+    </section>
+
+    <!-- Filtros -->
+    <section class="mt-8 bg-white rounded-2xl shadow p-4">
+      <h2 class="text-lg font-semibold mb-3">Filtros</h2>
+      <div class="grid md:grid-cols-5 gap-3">
+        <input id="f-buscar" type="text" placeholder="Buscar por nombre / domicilio / descripción"
+               class="w-full rounded-lg px-3 py-2 bg-sky-50 border border-sky-300 text-slate-800
+                      hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500">
+
+        <select id="f-categoria"
+                class="rounded-lg px-3 py-2 bg-sky-50 border border-sky-300 text-slate-800
+                       hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500">
+          <option value="">Categoría (todas)</option>
+          <option value="hardware">Hardware</option>
+          <option value="software">Software</option>
+          <option value="redes">Redes</option>
+          <option value="otros">Otros</option>
+        </select>
+
+        <select id="f-tipo"
+                class="rounded-lg px-3 py-2 bg-sky-50 border border-sky-300 text-slate-800
+                       hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500">
+          <option value="">Tipo (todos)</option>
+          <option value="preventivo">Preventivo</option>
+          <option value="correctivo">Correctivo</option>
+        </select>
+
+        <select id="f-prioridad"
+                class="rounded-lg px-3 py-2 bg-sky-50 border border-sky-300 text-slate-800
+                       hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500">
+          <option value="">Prioridad (todas)</option>
+          <option value="baja">Baja</option>
+          <option value="media">Media</option>
+          <option value="alta">Alta</option>
+          <option value="critica">Crítica</option>
+        </select>
+
+        <select id="f-estado"
+                class="rounded-lg px-3 py-2 bg-sky-50 border border-sky-300 text-slate-800
+                       hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500">
+          <option value="">Estado (todos)</option>
+          <option value="abierto">Abierto</option>
+          <option value="en_proceso">En proceso</option>
+          <option value="resuelto">Resuelto</option>
+          <option value="cerrado">Cerrado</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Tabla editable -->
+    <section class="mt-6 bg-white rounded-2xl shadow overflow-hidden">
+      <div class="bg-gradient-to-r from-sky-600 to-indigo-600 text-white px-4 py-3">
+        <h2 class="text-lg font-semibold">Gestión de tickets</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-slate-700">
+            <tr class="bg-sky-50">
+              <th class="text-left px-4 py-3">ID</th>
+              <th class="text-left px-4 py-3">Nombre</th>
+              <th class="text-left px-4 py-3">Teléfono</th>
+              <th class="text-left px-4 py-3">Domicilio</th>
+              <th class="text-left px-4 py-3">Descripción</th>
+              <th class="text-left px-4 py-3">Categoría</th>
+              <th class="text-left px-4 py-3">Tipo</th>
+              <th class="text-left px-4 py-3">Prioridad</th>
+              <th class="text-left px-4 py-3">Estado</th>
+              <th class="text-left px-4 py-3">Creado</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-tickets">
+            {% for t in tickets %}
+            <tr class="border-t hover:bg-slate-50 transition"
+                data-row
+                data-categoria="{{ t.categoria }}"
+                data-tipo="{{ t.tipo }}"
+                data-prioridad="{{ t.prioridad }}"
+                data-estado="{{ t.estado }}"
+                data-text="{{ (t.nombre or '') }} {{ (t.telefono or '') }} {{ (t.domicilio or '') }} {{ (t.descripcion or '') }}">
+              <td class="px-4 py-3 font-medium text-slate-700">{{ t.id }}</td>
+              <td class="px-4 py-3">{{ t.nombre or '-' }}</td>
+              <td class="px-4 py-3">{{ t.telefono or '-' }}</td>
+              <td class="px-4 py-3">{{ t.domicilio or '-' }}</td>
+              <td class="px-4 py-3 max-w-md">
+                <div class="line-clamp-3" title="{{ t.descripcion|e }}">{{ t.descripcion }}</div>
+              </td>
+
+              <!-- Categoria -->
+              <td class="px-4 py-3">
+                <select class="cell-select rounded-md px-2 py-1
+                               bg-sky-50 border border-sky-300 text-slate-800
+                               hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500"
+                        data-id="{{ t.id }}" data-field="categoria">
+                  <option value="hardware" {{ 'selected' if t.categoria=='hardware' else '' }}>Hardware</option>
+                  <option value="software" {{ 'selected' if t.categoria=='software' else '' }}>Software</option>
+                  <option value="redes"    {{ 'selected' if t.categoria=='redes'    else '' }}>Redes</option>
+                  <option value="otros"    {{ 'selected' if t.categoria=='otros'    else '' }}>Otros</option>
+                </select>
+              </td>
+
+              <!-- Tipo -->
+              <td class="px-4 py-3">
+                <select class="cell-select rounded-md px-2 py-1
+                               bg-sky-50 border border-sky-300 text-slate-800
+                               hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500"
+                        data-id="{{ t.id }}" data-field="tipo">
+                  <option value="preventivo" {{ 'selected' if t.tipo=='preventivo' else '' }}>Preventivo</option>
+                  <option value="correctivo" {{ 'selected' if t.tipo=='correctivo' else '' }}>Correctivo</option>
+                </select>
+              </td>
+
+              <!-- Prioridad -->
+              <td class="px-4 py-3">
+                <select class="cell-select rounded-md px-2 py-1
+                               bg-sky-50 border border-sky-300 text-slate-800
+                               hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500"
+                        data-id="{{ t.id }}" data-field="prioridad">
+                  <option value="baja"    {{ 'selected' if t.prioridad=='baja'    else '' }}>Baja</option>
+                  <option value="media"   {{ 'selected' if t.prioridad=='media'   else '' }}>Media</option>
+                  <option value="alta"    {{ 'selected' if t.prioridad=='alta'    else '' }}>Alta</option>
+                  <option value="critica" {{ 'selected' if t.prioridad=='critica' else '' }}>Crítica</option>
+                </select>
+              </td>
+
+              <!-- Estado -->
+              <td class="px-4 py-3">
+                <select class="cell-select rounded-md px-2 py-1
+                               bg-sky-50 border border-sky-300 text-slate-800
+                               hover:bg-sky-100 focus:ring-2 focus:ring-sky-400 focus:border-sky-500"
+                        data-id="{{ t.id }}" data-field="estado">
+                  <option value="abierto"     {{ 'selected' if t.estado=='abierto'     else '' }}>Abierto</option>
+                  <option value="en_proceso"  {{ 'selected' if t.estado=='en_proceso'  else '' }}>En proceso</option>
+                  <option value="resuelto"    {{ 'selected' if t.estado=='resuelto'    else '' }}>Resuelto</option>
+                  <option value="cerrado"     {{ 'selected' if t.estado=='cerrado'     else '' }}>Cerrado</option>
+                </select>
+              </td>
+
+              <td class="px-4 py-3 text-slate-500">{{ t.fecha_creacion }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td class="px-4 py-6 text-slate-500" colspan="10">No hay tickets aún.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-4 right-4 hidden px-4 py-3 rounded-lg shadow text-sm"></div>
+
+  <script>
+    // --- filtros ---
+    const $q = (sel, el=document) => el.querySelector(sel);
+    const $qa = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    const fBuscar    = $q('#f-buscar');
+    const fCategoria = $q('#f-categoria');
+    const fTipo      = $q('#f-tipo');
+    const fPrioridad = $q('#f-prioridad');
+    const fEstado    = $q('#f-estado');
+
+    function aplicaFiltros() {
+      const txt = (fBuscar.value || '').toLowerCase();
+      const cat = fCategoria.value;
+      const tip = fTipo.value;
+      const pri = fPrioridad.value;
+      const est = fEstado.value;
+
+      $qa('tbody [data-row]').forEach(tr => {
+        const okTxt = tr.dataset.text.toLowerCase().includes(txt);
+        const okCat = !cat || tr.dataset.categoria === cat;
+        const okTip = !tip || tr.dataset.tipo === tip;
+        const okPri = !pri || tr.dataset.prioridad === pri;
+        const okEst = !est || tr.dataset.estado === est;
+        tr.style.display = (okTxt && okCat && okTip && okPri && okEst) ? '' : 'none';
+      });
+    }
+    [fBuscar, fCategoria, fTipo, fPrioridad, fEstado].forEach(el => {
+      el.addEventListener('input', aplicaFiltros);
+      el.addEventListener('change', aplicaFiltros);
+    });
+
+    // --- edición en línea ---
+    const API_BASE = '/api/tickets/'; // requiere PATCH /api/tickets/<id> en el backend
+
+    function showToast(msg, ok=true) {
+      const t = $q('#toast');
+      t.textContent = msg;
+      t.className = 'fixed top-4 right-4 px-4 py-3 rounded-lg shadow text-sm ' +
+                    (ok ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white');
+      t.style.opacity = '0';
+      t.style.transition = 'opacity .2s ease';
+      t.classList.remove('hidden');
+      requestAnimationFrame(() => t.style.opacity = '1');
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(()=> t.classList.add('hidden'), 200); }, 1500);
+    }
+
+    async function updateField(id, field, value, selectEl) {
+      const prev = selectEl.getAttribute('data-prev') || '';
+      selectEl.setAttribute('disabled', 'disabled');
+
+      try {
+        const res = await fetch(API_BASE + id, {
+          method: 'PATCH',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ [field]: value })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          selectEl.setAttribute('data-prev', value);
+          selectEl.closest('tr').dataset[field] = value; // para filtros
+          selectEl.classList.add('flash-ok');
+          showToast('Guardado');
+        } else {
+          throw new Error(data.message || 'Error al guardar');
+        }
+      } catch (e) {
+        if (prev) selectEl.value = prev;       // revertir
+        selectEl.classList.add('flash-bad');
+        showToast('No se pudo guardar', false);
+      } finally {
+        setTimeout(()=>{ selectEl.classList.remove('flash-ok','flash-bad'); }, 900);
+        selectEl.removeAttribute('disabled');
+      }
+    }
+
+    $qa('.cell-select').forEach(sel => {
+      sel.setAttribute('data-prev', sel.value);
+      sel.addEventListener('change', e => {
+        const el = e.currentTarget;
+        updateField(el.dataset.id, el.dataset.field, el.value, el);
+      });
+    });
+  </script>
+</body>
+</html>

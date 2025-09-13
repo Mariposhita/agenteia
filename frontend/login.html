@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Login | Soporte</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <form method="post" class="bg-white p-8 rounded shadow w-full max-w-sm">
+    <h1 class="text-2xl font-bold mb-6 text-center">Iniciar sesión</h1>
+
+    {% with msgs = get_flashed_messages(category_filter=['error']) %}
+      {% if msgs %}
+        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">{{ msgs[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <label class="block mb-2 text-sm text-gray-700">Usuario</label>
+    <input name="username" class="w-full border rounded px-3 py-2 mb-4" required>
+
+    <label class="block mb-2 text-sm text-gray-700">Contraseña</label>
+    <input name="password" type="password" class="w-full border rounded px-3 py-2 mb-6" required>
+
+    <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Entrar</button>
+  </form>
+</body>
+</html>
